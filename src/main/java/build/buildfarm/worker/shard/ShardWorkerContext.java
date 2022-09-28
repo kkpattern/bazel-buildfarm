@@ -294,8 +294,16 @@ class ShardWorkerContext implements WorkerContext {
     }
     listener.onWaitEnd();
 
-    if (queueEntry == null
-        || DequeueMatchEvaluator.shouldKeepOperation(matchSettings, matchProvisions, queueEntry)) {
+    boolean match = false;
+    if (queueEntry == null) {
+      match = true;
+    } else {
+      QueuedOperation operation = getQueuedOperation(queueEntry);
+      if (DequeueMatchEvaluator.shouldKeepOperation(matchSettings, matchProvisions, operation.getCommand())) {
+        match = true;
+      }
+    }
+    if (match) {
       listener.onEntry(queueEntry);
     } else {
       backplane.rejectOperation(queueEntry);

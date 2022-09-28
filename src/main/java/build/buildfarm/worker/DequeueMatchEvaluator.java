@@ -16,6 +16,7 @@ package build.buildfarm.worker;
 
 import build.bazel.remote.execution.v2.Command;
 import build.bazel.remote.execution.v2.Platform;
+import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.buildfarm.common.ExecutionProperties;
 import build.buildfarm.v1test.QueueEntry;
 import com.google.common.collect.Iterables;
@@ -74,6 +75,14 @@ public class DequeueMatchEvaluator {
       DequeueMatchSettings matchSettings,
       SetMultimap<String, String> workerProvisions,
       Command command) {
+    for (EnvironmentVariable env : command.getEnvironmentVariablesList()) {
+      if (env.getName().equals("XCODE_VERSION_OVERRIDE")) {
+        if (!(workerProvisions.containsEntry(env.getName(), env.getValue())
+            || workerProvisions.containsEntry(env.getName(), "*"))) {
+          return false;
+        }
+      }
+    }
     return shouldKeepViaPlatform(matchSettings, workerProvisions, command.getPlatform());
   }
 
